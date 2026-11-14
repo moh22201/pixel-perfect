@@ -204,6 +204,10 @@
 .interaction p { font-size: 13px; line-height: 1.9; margin: 10px 0 16px; color: var(--muted-foreground); }
 .object-detail { border-top: 1px solid var(--border); padding: 12px 0; display: flex; justify-content: space-between; font-size: 12px; }
 .interaction-action { width: 100%; }
+.region-option { display: flex; width: 100%; justify-content: start; margin-top: 8px; min-height: 42px; }
+.region-option svg:last-child { margin-inline-start: auto; }
+.region-condition { border-top: 1px solid var(--border); padding-top: 10px; font-size: 12px; }
+.region-condition p { margin: 4px 0 12px; }
 .footer-bar { height: 30px; flex: 0 0 30px; background: var(--background); border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 26px; font-size: 10px; color: var(--muted-foreground); }
 @keyframes sprout-pulse { 50% { transform: translateY(-5px); } }
 @media (min-width: 1600px) { .brand h1 { font-size: 22px; } }

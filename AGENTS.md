@@ -33,3 +33,4 @@ use the editor.
 - Keep the TanStack route responsible for React HUD and dialogs; load Phaser dynamically inside an effect so its browser-only imports never execute during SSR.
 - Separate navigation/collision data, original sprite generation, scene movement, and UI events into game modules so later farming systems can extend the world without rewriting the interface.
 - Use world-coordinate A* paths and explicit interaction approach points for movement; solid world objects must be reached from adjacent walkable ground.
+- Preserve farm-local navigation coordinates within the larger archipelago; region metadata defines locked expansion hit areas and reachable main-island approach points so future unlock systems can extend state without replacing the farm.

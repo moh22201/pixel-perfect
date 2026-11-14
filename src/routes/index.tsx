@@ -1,8 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { lazy, Suspense, useRef, useState } from 'react';
-import { Compass, Footprints, Home, LocateFixed, Map, Minus, Plus, Sprout, Sun, UserRound, Warehouse, Wheat, X, ArrowLeft } from 'lucide-react';
+import { Compass, Footprints, Home, LocateFixed, Map, Minus, Plus, Sprout, Sun, UserRound, Warehouse, Wheat, X, ArrowLeft, LockKeyhole } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import worldImage from '@/assets/meadow-world.jpg';
+import worldImage from '@/assets/world-minimap.jpg';
+import { regions, ARCHIPELAGO_SIZE, WORLD_OFFSET } from '@/game/regions';
 import type { WorldObject } from '@/game/world';
 import type { GameCommand } from '@/game/events';
 
@@ -25,6 +26,7 @@ const details = {
   field: { description: 'تربة خصبة ومساحة جاهزة للزراعة. ستبدأ أولى المحاصيل في المرحلة التالية.', label: 'حالة الأرض', value: 'غير مزروعة', action: 'متابعة الاستكشاف' },
   storage: { description: 'مخزن خشبي بجانب الممر الشرقي. سيحفظ محاصيل المزرعة ومواردها عندما تبدأ الزراعة.', label: 'حالة المخزن', value: 'فارغ', action: 'العودة إلى المزرعة' },
   barn: { description: 'حظيرة المزرعة وفناؤها الصغير. الدجاج والأبقار والأغنام ستصل في مرحلة الحيوانات.', label: 'حالة الحظيرة', value: 'لا توجد حيوانات بعد', action: 'العودة إلى المزرعة' },
+  region: { description: '', label: 'الحالة', value: 'مغلقة', action: 'متابعة الاستكشاف' },
 };
 
 function Index() {
@@ -32,9 +34,11 @@ function Index() {
   const [ready, setReady] = useState(false);
   const [moving, setMoving] = useState(false);
   const [object, setObject] = useState<WorldObject | null>(null);
+  const [regionMenu, setRegionMenu] = useState(false);
   const [position, setPosition] = useState({ x: 936, y: 632 });
   const command = (value: GameCommand) => { setObject(null); commands.current?.(value); };
   const detail = object ? details[object.kind] : null;
+  const selectedRegion = regions.find(r => r.id === object?.id);
   return <main className="farm-app">
     <header className="topbar">
       <div className="brand"><span className="brand-mark"><Sprout size={25} strokeWidth={1.8} /></span><div><h1>LITTLE ACRE</h1><p dir="rtl">حكاية صغيرة، تنمو كل يوم</p></div></div>
@@ -52,15 +56,16 @@ function Index() {
         <div className="farm-plaque" dir="rtl"><h2>مزرعة الوادي</h2><div className="plaque-sub"><span className="status-dot" />بداية الحكاية <span>·</span> الربيع</div></div>
         <div className="day-plaque" dir="rtl"><Sun size={25} /><div>نهار مشمس<small>نسيم الربيع</small></div></div>
       </div>
-      <div className="map-preview" aria-label="خريطة مصغرة"><img src={worldImage} width={128} height={128} alt="خريطة مزرعة الوادي" /><svg viewBox="0 0 1536 1536"><circle cx={position.x} cy={position.y} r="42" fill="currentColor" /><circle cx={position.x} cy={position.y} r="64" fill="none" stroke="currentColor" strokeWidth="14" /></svg></div>
+      <div className="map-preview" aria-label="خريطة مصغرة"><img src={worldImage} width={128} height={128} alt="خريطة جزر الوادي" /><svg viewBox={`0 0 ${ARCHIPELAGO_SIZE} ${ARCHIPELAGO_SIZE}`}><circle cx={position.x + WORLD_OFFSET} cy={position.y + WORLD_OFFSET} r="42" fill="currentColor" /><circle cx={position.x + WORLD_OFFSET} cy={position.y + WORLD_OFFSET} r="64" fill="none" stroke="currentColor" strokeWidth="14" /></svg></div>
       <div className="movement-state" dir="rtl"><Footprints size={15} /><span>{moving ? 'في الطريق…' : 'في المزرعة'}</span><span className="status-dot" /></div>
       <div className="bottom-dock" dir="rtl">
-        <Button variant="ghost" className="dock-button" onClick={() => command('center')} title="المزرعة كاملة"><Map /><span>المزرعة</span></Button>
+        <Button variant="ghost" className="dock-button" onClick={() => { command('overview'); setRegionMenu(false); }} title="خريطة الجزر"><Map /><span>الجزر</span></Button>
         <span className="dock-divider" />
         <Button variant="ghost" className="dock-button" onClick={() => command('home')} title="الذهاب إلى المنزل"><Home /><span>المنزل</span></Button>
         <Button variant="ghost" className="dock-button" onClick={() => command('fields')} title="الذهاب إلى الحقول"><Wheat /><span>الحقول</span></Button>
-        <Button variant="ghost" className="dock-button" onClick={() => command('zoom-in')} title="استكشاف المزرعة عن قرب"><Compass /><span>استكشاف</span></Button>
+        <Button variant="ghost" className="dock-button" onClick={() => { command('overview'); setRegionMenu(v => !v); }} title="مناطق الاستكشاف"><Compass /><span>استكشاف</span></Button>
       </div>
+      {regionMenu && !object && <aside className="interaction region-menu" dir="rtl" aria-label="مناطق الاستكشاف"><div className="interaction-header"><h3>جزر الوادي</h3><Button variant="ghost" size="icon" aria-label="إغلاق المناطق" onClick={() => setRegionMenu(false)}><X /></Button></div><div className="object-detail"><span>الجزيرة الرئيسية</span><strong>متاحة</strong></div>{regions.map(r => <Button key={r.id} variant="ghost" className="region-option" onClick={() => { setRegionMenu(false); command(r.id as GameCommand); }}><LockKeyhole /><span>{r.name}</span><ArrowLeft /></Button>)}</aside>}
       <div className="zoom-controls">
         <Button variant="ghost" size="icon" aria-label="تكبير" title="تكبير" onClick={() => command('zoom-in')}><Plus /></Button>
         <Button variant="ghost" size="icon" aria-label="تصغير" title="تصغير" onClick={() => command('zoom-out')}><Minus /></Button>
@@ -68,8 +73,9 @@ function Index() {
       </div>
       {object && detail && <aside className="interaction" dir="rtl" role="dialog" aria-label={object.name}>
         <div className="interaction-header"><h3>{object.name}</h3><Button variant="ghost" size="icon" aria-label="إغلاق" onClick={() => setObject(null)}><X /></Button></div>
-        <div className="object-portrait">{object.kind === 'field' ? <Wheat size={50} className="text-primary" /> : object.kind === 'home' ? <Home size={50} className="text-primary" /> : <Warehouse size={50} className="text-primary" />}</div>
-        <p>{detail.description}</p><div className="object-detail"><span>{detail.label}</span><strong>{detail.value}</strong></div>
+        <div className="object-portrait">{object.kind === 'region' ? <LockKeyhole size={50} className="text-primary" /> : object.kind === 'field' ? <Wheat size={50} className="text-primary" /> : object.kind === 'home' ? <Home size={50} className="text-primary" /> : <Warehouse size={50} className="text-primary" />}</div>
+        <p>{selectedRegion?.description ?? detail.description}</p><div className="object-detail"><span>{detail.label}</span><strong>{detail.value}</strong></div>
+        {selectedRegion && <div className="region-condition"><strong>شرط الفتح</strong><p>{selectedRegion.condition}</p></div>}
         <Button className="interaction-action" onClick={() => setObject(null)}>{detail.action}<ArrowLeft /></Button>
       </aside>}
     </section>

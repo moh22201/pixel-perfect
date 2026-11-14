@@ -1,5 +1,7 @@
 import * as Phaser from 'phaser';
-import worldImage from '@/assets/meadow-world.jpg';
+import worldImage from '@/assets/farm-island.png';
+import oceanImage from '@/assets/archipelago.jpg';
+import { ARCHIPELAGO_SIZE, WORLD_OFFSET, regions, regionAt } from './regions';
 import { createFarmer } from './farmer';
 import { CELL, WORLD_SIZE, findPath, objects, type Point, type WorldObject } from './world';
 import type { GameCallbacks, GameCommand } from './events';
@@ -13,21 +15,49 @@ export class FarmScene extends Phaser.Scene {
   private facing = 'down';
   private lastPosition = 0;
   private zoomFloor = 0.4;
+  private overview = false;
+  private dragging = false;
+  private ripples: Phaser.GameObjects.Rectangle[] = [];
   constructor(private callbacks: GameCallbacks) { super('farm'); }
-  preload() { this.load.image('world', worldImage); }
+  preload() { this.load.image('world', worldImage); this.load.image('ocean', oceanImage); }
   create() {
+    this.add.image(-WORLD_OFFSET, -WORLD_OFFSET, 'ocean').setOrigin(0).setDisplaySize(ARCHIPELAGO_SIZE, ARCHIPELAGO_SIZE);
     this.add.image(0, 0, 'world').setOrigin(0).setDisplaySize(WORLD_SIZE, WORLD_SIZE);
+    for (let i = 0; i < 60; i++) {
+      const x = -600 + (i % 12) * 260, y = -440 + Math.floor(i / 12) * 640;
+      if (x > -120 && x < 1650 && y > -120 && y < 1650) continue;
+      this.ripples.push(this.add.rectangle(x, y, 15 + i % 3 * 8, 3, 0xb5f5ef, 0.3).setDepth(1));
+    }
+    for (const region of regions) {
+      const x = region.x + region.w / 2, y = region.y + region.h / 2;
+      const lock = this.add.graphics().setDepth(4);
+      lock.fillStyle(0x68492f).fillRect(x - 30, y - 34, 60, 48);
+      lock.fillStyle(0xedcc79).fillRect(x - 24, y - 30, 48, 36);
+      lock.lineStyle(8, 0x68492f).strokeRect(x - 14, y - 48, 28, 25);
+      lock.fillStyle(0x68492f).fillRect(x - 4, y - 20, 8, 16);
+      this.add.text(x, y + 30, region.name, { fontFamily: 'IBM Plex Sans Arabic', fontSize: '24px', color: '#fff5d8', stroke: '#234b3a', strokeThickness: 6 }).setOrigin(0.5).setDepth(4);
+    }
     createFarmer(this);
     this.shadow = this.add.ellipse(936, 632, 33, 12, 0x283a27, 0.25).setDepth(9);
     this.farmer = this.add.sprite(936, 632, 'farmer-down-0').setOrigin(0.5, 1).setScale(2.2).setDepth(10);
     this.marker = this.add.circle(0, 0, 13).setStrokeStyle(3, 0xffedb3).setFillStyle(0xffedb3, 0.1).setVisible(false).setDepth(8);
     const camera = this.cameras.main;
-    camera.setBounds(0, 0, WORLD_SIZE, WORLD_SIZE);
+    camera.setBounds(-WORLD_OFFSET, -WORLD_OFFSET, ARCHIPELAGO_SIZE, ARCHIPELAGO_SIZE);
     camera.startFollow(this.farmer, true, 0.08, 0.08);
     this.resize();
     this.scale.on('resize', this.resize, this);
-    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+    this.input.on('pointerdown', () => { this.dragging = false; });
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      if (!pointer.isDown || pointer.getDistance() < 8) return;
+      this.dragging = true; camera.stopFollow();
+      camera.scrollX -= (pointer.x - pointer.prevPosition.x) / camera.zoom;
+      camera.scrollY -= (pointer.y - pointer.prevPosition.y) / camera.zoom;
+    });
+    this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
+      if (this.dragging) return;
       const point = camera.getWorldPoint(pointer.x, pointer.y);
+      const region = regionAt(point.x, point.y);
+      if (region) { this.goTo(region.approach, region); return; }
       const object = objects.find(o => point.x >= o.x && point.x <= o.x + o.w && point.y >= o.y && point.y <= o.y + o.h);
       this.goTo(object ? object.approach : point, object);
     });
@@ -35,14 +65,22 @@ export class FarmScene extends Phaser.Scene {
     this.callbacks.ready();
   }
   private resize() {
-    this.zoomFloor = Math.max(this.scale.width / WORLD_SIZE, this.scale.height / WORLD_SIZE);
-    this.cameras.main.setZoom(this.zoomFloor * 1.03);
+    this.zoomFloor = Math.max(this.scale.width / ARCHIPELAGO_SIZE, this.scale.height / ARCHIPELAGO_SIZE);
+    if (this.overview) this.showOverview();
+    else this.cameras.main.setZoom(Math.max(this.zoomFloor, Math.min(this.scale.width / 1280, this.scale.height / 1200)));
   }
-  private zoom(factor: number) { this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom * factor, this.zoomFloor, this.zoomFloor * 2.6)); }
+  private zoom(factor: number) { this.overview = false; this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom * factor, this.zoomFloor, 2.5)); }
+  private showOverview() {
+    this.overview = true;
+    this.cameras.main.stopFollow().setZoom(this.zoomFloor).centerOn(WORLD_SIZE / 2, WORLD_SIZE / 2);
+  }
   command(command: GameCommand) {
     if (command === 'zoom-in') return this.zoom(1.15);
     if (command === 'zoom-out') return this.zoom(1 / 1.15);
-    if (command === 'center') { this.resize(); return; }
+    if (command === 'overview') { this.showOverview(); return; }
+    if (command === 'center') { this.overview = false; this.resize(); if (this.farmer) this.cameras.main.startFollow(this.farmer, true, 0.08, 0.08); return; }
+    const region = regions.find(r => r.id === command);
+    if (region) { this.goTo(region.approach, region); return; }
     const object = objects.find(o => o.id === (command === 'home' ? 'home' : 'field-5'));
     if (object) this.goTo(object.approach, object);
   }
@@ -54,10 +92,15 @@ export class FarmScene extends Phaser.Scene {
       return;
     }
     this.path = path; this.target = object;
+    if (!this.overview) this.cameras.main.startFollow(this.farmer, true, 0.08, 0.08);
     this.marker?.setPosition(point.x, point.y).setVisible(true);
     this.callbacks.moving(true);
   }
   override update(time: number, delta: number) {
+    for (let i = 0; i < this.ripples.length; i++) {
+      const ripple = this.ripples[i];
+      if (ripple) ripple.setAlpha(0.12 + (Math.sin(time / 1300 + i) + 1) * 0.13).setScale(1 + Math.sin(time / 2000 + i) * 0.25, 1);
+    }
     if (!this.farmer) return;
     const next = this.path[0];
     if (next) {
