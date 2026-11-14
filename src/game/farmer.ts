@@ -1,4 +1,4 @@
-import type Phaser from 'phaser';
+import type * as Phaser from 'phaser';
 
 // Original pixel sprite palette; each frame is drawn at native resolution.
 const palette: Record<string, string> = { h: '#68492f', H: '#c69751', Y: '#edcc79', s: '#f2b989', S: '#ca8966', e: '#322e28', g: '#527963', G: '#83a173', b: '#486b85', B: '#7292aa', w: '#f7e8ca', f: '#554638' };

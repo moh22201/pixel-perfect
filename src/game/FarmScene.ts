@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import worldImage from '@/assets/meadow-world.jpg';
 import { createFarmer } from './farmer';
 import { CELL, WORLD_SIZE, findPath, objects, type Point, type WorldObject } from './world';

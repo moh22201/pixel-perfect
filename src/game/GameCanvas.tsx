@@ -11,7 +11,7 @@ export default function GameCanvas({ callbacks, commandRef }: { callbacks: GameC
     let game: import('phaser').Game | undefined;
     let scene: FarmScene | undefined;
     async function start() {
-      const [{ default: Phaser }, { FarmScene }] = await Promise.all([import('phaser'), import('./FarmScene')]);
+      const [Phaser, { FarmScene }] = await Promise.all([import('phaser'), import('./FarmScene')]);
       if (disposed || !container.current) return;
       scene = new FarmScene({ ready: () => callbackRef.current.ready(), arrived: o => callbackRef.current.arrived(o), moving: m => callbackRef.current.moving(m), position: (x, y) => callbackRef.current.position(x, y) });
       game = new Phaser.Game({ type: Phaser.AUTO, parent: container.current, transparent: true, pixelArt: true, antialias: false, scale: { mode: Phaser.Scale.RESIZE, width: container.current.clientWidth, height: container.current.clientHeight }, scene: [scene], audio: { noAudio: true } });
