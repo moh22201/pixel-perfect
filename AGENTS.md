@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Game architecture
+- Keep the TanStack route responsible for React HUD and dialogs; load Phaser dynamically inside an effect so its browser-only imports never execute during SSR.
+- Separate navigation/collision data, original sprite generation, scene movement, and UI events into game modules so later farming systems can extend the world without rewriting the interface.
+- Use world-coordinate A* paths and explicit interaction approach points for movement; solid world objects must be reached from adjacent walkable ground.
