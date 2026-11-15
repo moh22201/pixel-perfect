@@ -34,3 +34,5 @@ use the editor.
 - Separate navigation/collision data, original sprite generation, scene movement, and UI events into game modules so later farming systems can extend the world without rewriting the interface.
 - Use world-coordinate A* paths and explicit interaction approach points for movement; solid world objects must be reached from adjacent walkable ground.
 - Preserve farm-local navigation coordinates within the larger archipelago; region metadata defines locked expansion hit areas and reachable main-island approach points so future unlock systems can extend state without replacing the farm.
+- Keep catalog definitions and serializable player-state types in client-safe game modules; React owns dialogs and Phaser owns visible world state, with explicit commands/events between them.
+- All economy, inventory, timed production, progression and trade mutations run in transactional database functions through authenticated server functions; browser clients only read their permitted state and request named actions.
