@@ -25,9 +25,9 @@ export const getFarmState = createServerFn({ method: 'GET' })
     for (const result of [profile, farm, inventory, crops, animals, buildings, resources, regions, stats, claims, ledger]) fail(result.error);
     if (!profile.data || !farm.data || !stats.data) throw new Error('تعذر تحميل المزرعة');
     return {
-      profile: profile.data, farm: farm.data, inventory: inventory.data, crops: crops.data,
-      animals: animals.data, buildings: buildings.data, resources: resources.data, regions: regions.data,
-      stats: stats.data, claims: claims.data, ledger: ledger.data, now: new Date().toISOString(),
+      profile: profile.data, farm: farm.data, inventory: inventory.data ?? [], crops: crops.data ?? [],
+      animals: animals.data ?? [], buildings: buildings.data ?? [], resources: resources.data ?? [], regions: regions.data ?? [],
+      stats: stats.data, claims: claims.data ?? [], ledger: ledger.data ?? [], now: new Date().toISOString(),
     };
   });
 
