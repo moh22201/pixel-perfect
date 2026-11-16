@@ -20,5 +20,7 @@ jobs:
         run: bun install --frozen-lockfile
       - name: TypeScript check
         run: bunx tsc --noEmit
+      - name: Game system tests
+        run: bun run test
       - name: Vite production build
         run: bun run build
