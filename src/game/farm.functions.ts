@@ -41,7 +41,7 @@ export const getTradeState = createServerFn({ method: 'GET' })
       db.from('profiles').select('id, farmer_name').order('farmer_name').limit(200),
     ]);
     fail(listings.error); fail(trades.error); fail(directory.error);
-    return { listings: listings.data, trades: trades.data, directory: directory.data, now: new Date().toISOString() };
+    return { listings: listings.data ?? [], trades: trades.data ?? [], directory: directory.data ?? [], now: new Date().toISOString() };
   });
 
 const farmInput = z.object({
