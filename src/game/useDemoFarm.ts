@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { applyDemoAction, createDemoState, DEMO_STORAGE_KEY, type DemoAction, type DemoState } from './demo-store';
 
 export function useDemoFarm() {
   const [state, setState] = useState<DemoState>(createDemoState);
+  const stateRef = useRef(state);
   const [hydrated, setHydrated] = useState(false);
+  stateRef.current = state;
 
   useEffect(() => {
     try {
@@ -12,6 +13,7 @@ export function useDemoFarm() {
       if (saved) {
         const parsed: unknown = JSON.parse(saved);
         if (parsed && typeof parsed === 'object' && 'fields' in parsed && 'inventory' in parsed) {
+          stateRef.current = parsed as DemoState;
           setState(parsed as DemoState);
         }
       }
@@ -32,20 +34,17 @@ export function useDemoFarm() {
   }, [hydrated, state]);
 
   const act = useCallback((action: DemoAction) => {
-    let resultMessage = '';
-    let succeeded = false;
-    setState(previous => {
-      const result = applyDemoAction(previous, action);
-      resultMessage = result.message;
-      succeeded = result.ok;
-      return result.state;
-    });
-    // The message is presented by the caller; state changes remain local to this browser.
-    return { get message() { return resultMessage; }, get ok() { return succeeded; } };
+    const result = applyDemoAction(stateRef.current, action);
+    if (result.ok) {
+      stateRef.current = result.state;
+      setState(result.state);
+    }
+    return { message: result.message, ok: result.ok };
   }, []);
 
   const reset = useCallback(() => {
     const fresh = createDemoState();
+    stateRef.current = fresh;
     setState(fresh);
     try { window.localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(fresh)); } catch { /* storage may be unavailable */ }
   }, []);
