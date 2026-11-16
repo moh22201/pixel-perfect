@@ -23,7 +23,7 @@ export function SystemsPanel({ onClose }: { onClose?: () => void }) {
   const [crop, setCrop] = useState<CropKey>('wheat');
   const [field, setField] = useState(1);
   const [quantity, setQuantity] = useState(1);
-  const [item, setItem] = useState('wheat');
+  const [item, setItem] = useState('wheat_seed');
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
@@ -81,7 +81,7 @@ export function SystemsPanel({ onClose }: { onClose?: () => void }) {
       {tab === 'animals' && <div className="systems-content">
         <h3>الحظيرة والإنتاج الحيواني</h3>
         <p className="systems-muted">اشترِ الحيوان، وقدّم له العلف، ثم اجمع المنتج عند اكتمال الدورة.</p>
-        <div className="systems-list">{state.animals.map(a => <div className="systems-row" key={a.id}><div><strong>{animals[a.kind].name}</strong><small>{animals[a.kind].productName} · {remaining(a.readyAt, now)}</small></div><div className="systems-row-actions">{a.readyAt === null || a.readyAt <= now ? <Button size="sm" variant="outline" onClick={() => run({ type: 'feed-animal', id: a.id })}>إطعام</Button> : null}{a.readyAt !== null && a.readyAt <= now ? <Button size="sm" onClick={() => run({ type: 'collect-animal', id: a.id })}>جمع</Button> : null}</div></div>)}</div>
+        <div className="systems-list">{state.animals.map(a => <div className="systems-row" key={a.id}><div><strong>{animals[a.kind].name}</strong><small>{animals[a.kind].productName} · {remaining(a.readyAt, now)}</small></div><div className="systems-row-actions">{a.readyAt === null ? <Button size="sm" variant="outline" onClick={() => run({ type: 'feed-animal', id: a.id })}>إطعام</Button> : null}{a.readyAt !== null && a.readyAt <= now ? <Button size="sm" onClick={() => run({ type: 'collect-animal', id: a.id })}>جمع</Button> : null}</div></div>)}</div>
         <h3 className="systems-subheading">شراء الحيوانات</h3>
         {(Object.keys(animals) as AnimalKey[]).map(key => <div className="systems-row" key={key}><div><strong>{animals[key].name}</strong><small>المستوى {animals[key].level} · {animals[key].price} عملة</small></div><Button size="sm" variant="outline" onClick={() => run({ type: 'buy-animal', animal: key })}>شراء</Button></div>)}
       </div>}
