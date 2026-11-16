@@ -57,7 +57,7 @@ export const runFarmAction = createServerFn({ method: 'POST' })
   .handler(async ({ data, context }) => {
     const { data: message, error } = await context.supabase.rpc('farm_action', {
       p_action: data.action, p_item: data.item ?? '', p_quantity: data.quantity ?? 1,
-      p_field: data.field ?? 0, p_recipe: data.recipe ?? '', p_target: data.target ?? null,
+      p_field: data.field ?? 0, p_recipe: data.recipe ?? '', p_target: data.target ?? undefined,
     });
     fail(error);
     return { message };
@@ -76,7 +76,7 @@ export const runTradeAction = createServerFn({ method: 'POST' })
   .handler(async ({ data, context }) => {
     const { data: message, error } = await context.supabase.rpc('trade_action', {
       p_action: data.action, p_item: data.item ?? '', p_quantity: data.quantity ?? 1,
-      p_target: data.target ?? null, p_price: data.price ?? 0,
+      p_target: data.target ?? undefined, p_price: data.price ?? 0,
     });
     fail(error);
     return { message };
