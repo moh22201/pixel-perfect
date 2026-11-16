@@ -28,6 +28,7 @@ describe('local demo game systems', () => {
   it('runs a production recipe after purchasing the building', () => {
     const initial = createDemoState();
     initial.level = 2;
+    initial.inventory['wheat'] = 2;
     const purchased = applyDemoAction(initial, { type: 'buy-building', building: 'mill' });
     expect(purchased.ok).toBe(true);
     const started = applyDemoAction(purchased.state, { type: 'start-recipe', building: 'mill' });
