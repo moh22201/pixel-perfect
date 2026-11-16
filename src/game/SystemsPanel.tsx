@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Wheat, PawPrint, Factory, Trees, Store, ScrollText, LockKeyhole, Package, Coins, Clock3, Sprout, Plus, Check, X } from 'lucide-react';
+import { Wheat, PawPrint, Factory, Trees, Store, ScrollText, LockKeyhole, Package, Coins, Clock3, Sprout, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { animals, buildings, crops, itemName, itemNames, quests, recipes, regionRules, formatSeconds, type AnimalKey, type BuildingKey, type CropKey } from './catalog';
+import { toast } from 'sonner';
+import { animals, buildings, crops, itemName, quests, recipes, regionRules, formatSeconds, type AnimalKey, type BuildingKey, type CropKey } from './catalog';
 import { useDemoFarm } from './useDemoFarm';
 
 type Tab = 'farm' | 'animals' | 'production' | 'resources' | 'market' | 'quests';
@@ -14,6 +15,7 @@ const tabs: { id: Tab; label: string; icon: typeof Wheat }[] = [
   { id: 'quests', label: 'المهام', icon: ScrollText },
 ];
 const remaining = (at: number | null, now: number) => at === null ? 'غير مفعّل' : at <= now ? 'جاهز' : formatSeconds((at - now) / 1000);
+const regionNames: Record<string, string> = { forest: 'جزيرة الغابة', mines: 'جزيرة المناجم', pasture: 'جزيرة المراعي', workshops: 'جزيرة الصناعة' };
 
 export function SystemsPanel({ onClose }: { onClose?: () => void }) {
   const { state, act, reset, hydrated } = useDemoFarm();
@@ -30,13 +32,8 @@ export function SystemsPanel({ onClose }: { onClose?: () => void }) {
 
   const run = (action: Parameters<typeof act>[0]) => {
     const result = act(action);
-    if (result.ok) {
-      // useDemoFarm commits the returned state synchronously.
-      const message = result.message;
-      if (message) window.dispatchEvent(new CustomEvent('little-acre-demo-message', { detail: message }));
-    } else if (result.message) {
-      window.dispatchEvent(new CustomEvent('little-acre-demo-message', { detail: result.message }));
-    }
+    if (result.ok) toast.success(result.message);
+    else toast.error(result.message);
   };
 
   const inventory = Object.entries(state.inventory).filter(([, amount]) => amount > 0);
@@ -100,7 +97,7 @@ export function SystemsPanel({ onClose }: { onClose?: () => void }) {
       {tab === 'resources' && <div className="systems-content"><h3>جمع الموارد</h3><p className="systems-muted">تُجمع الموارد من مناطقها، ولكل عقدة وقت تجدد قصير في وضع التجربة.</p>
         {(['wood', 'stone', 'herb', 'fibre', 'iron'] as const).map(key => { const region = ['wood', 'herb', 'fibre'].includes(key) ? 'forest' : key === 'iron' ? 'mines' : null; const unlocked = !region || state.regions.includes(region); return <div className="systems-row" key={key}><div><strong>{itemName(key)}</strong><small>المخزون: {state.inventory[key] ?? 0}{region ? ` · ${state.regions.includes(region) ? 'المنطقة مفتوحة' : 'تحتاج فتح المنطقة'}` : ''}</small></div><Button size="sm" disabled={!unlocked || (state.resources[key] ?? 0) > now} onClick={() => run({ type: 'gather', resource: key })}>جمع</Button></div>; })}
         <h3 className="systems-subheading">فتح المناطق</h3>
-        {Object.entries(regionRules).map(([key, rule]) => <div className="systems-row" key={key}><div><strong>{{ forest: 'جزيرة الغابة', mines: 'جزيرة المناجم', pasture: 'جزيرة المراعي', workshops: 'جزيرة الصناعة' }[key]}</strong><small>المستوى {rule.level} · {rule.price} عملة{rule.requirements.length ? ` · ${rule.requirements.map(r => `${r.quantity} ${itemName(r.item)}`).join('، ')}` : ''}</small></div>{state.regions.includes(key) ? <span className="systems-success"><Check size={14} /> مفتوحة</span> : <Button size="sm" variant="outline" onClick={() => run({ type: 'unlock-region', region: key })}><LockKeyhole size={13} /> فتح</Button>}</div>)}
+        {Object.entries(regionRules).map(([key, rule]) => <div className="systems-row" key={key}><div><strong>{regionNames[key] ?? key}</strong><small>المستوى {rule.level} · {rule.price} عملة{rule.requirements.length ? ` · ${rule.requirements.map(r => `${r.quantity} ${itemName(r.item)}`).join('، ')}` : ''}</small></div>{state.regions.includes(key) ? <span className="systems-success"><Check size={14} /> مفتوحة</span> : <Button size="sm" variant="outline" onClick={() => run({ type: 'unlock-region', region: key })}><LockKeyhole size={13} /> فتح</Button>}</div>)}
       </div>}
 
       {tab === 'market' && <div className="systems-content"><h3>السوق المحلي التجريبي</h3><p className="systems-notice">هذه محاكاة بيع داخل المتصفح فقط؛ لا يوجد لاعبون آخرون أو تداول عبر الإنترنت قبل ربط الحسابات.</p>
