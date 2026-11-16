@@ -112,7 +112,7 @@ export function applyDemoAction(current: DemoState, action: DemoAction): { state
       if (!animal) return reject('الحيوان غير موجود');
       if (animal.readyAt !== null) return reject(ready(animal.readyAt) ? 'اجمع المنتج الجاهز أولاً' : 'الحيوان في دورة إنتاج حالياً');
       if ((state.inventory.feed ?? 0) < 1) return reject('تحتاج إلى علف');
-      state.inventory.feed -= 1;
+      state.inventory['feed'] = (state.inventory['feed'] ?? 0) - 1;
       animal.readyAt = Date.now() + animals[animal.kind].seconds * 1000;
       return accept('تم تقديم العلف وبدأت دورة الإنتاج');
     }
@@ -137,7 +137,7 @@ export function applyDemoAction(current: DemoState, action: DemoAction): { state
       if (!building.owned) return reject('اشترِ المنشأة أولاً');
       if (building.recipe) return reject('هناك وصفة قيد التنفيذ');
       for (const ingredient of recipe.ingredients) if ((state.inventory[ingredient.item] ?? 0) < ingredient.quantity) return reject(`المكونات غير كافية: ${ingredient.item}`);
-      for (const ingredient of recipe.ingredients) state.inventory[ingredient.item] -= ingredient.quantity;
+      for (const ingredient of recipe.ingredients) state.inventory[ingredient.item] = (state.inventory[ingredient.item] ?? 0) - ingredient.quantity;
       building.recipe = recipe.key; building.readyAt = Date.now() + recipe.seconds * 1000;
       return accept(`بدأت وصفة ${recipe.name}`);
     }
@@ -164,7 +164,7 @@ export function applyDemoAction(current: DemoState, action: DemoAction): { state
       if (state.level < rule.level) return reject(`تحتاج إلى المستوى ${rule.level}`);
       if (!pay(rule.price)) return reject('الرصيد لا يكفي لفتح المنطقة');
       for (const item of rule.requirements) if ((state.inventory[item.item] ?? 0) < item.quantity) return reject(`تحتاج إلى ${item.quantity} من ${item.item}`);
-      for (const item of rule.requirements) state.inventory[item.item] -= item.quantity;
+      for (const item of rule.requirements) state.inventory[item.item] = (state.inventory[item.item] ?? 0) - item.quantity;
       state.regions.push(action.region);
       return accept('تم فتح المنطقة الجديدة');
     }
@@ -178,7 +178,7 @@ export function applyDemoAction(current: DemoState, action: DemoAction): { state
     }
     case 'list-item': {
       if (!Number.isInteger(action.quantity) || action.quantity < 1 || (state.inventory[action.item] ?? 0) < action.quantity) return reject('الكمية غير متاحة في المخزون');
-      state.inventory[action.item] -= action.quantity;
+      state.inventory[action.item] = (state.inventory[action.item] ?? 0) - action.quantity;
       state.listings.push({ id: state.nextId++, item: action.item, quantity: action.quantity, unitPrice: salePrices[action.item] ?? 1, createdAt: Date.now() });
       return accept('أُدرج المنتج في سوق التجربة المحلي');
     }
