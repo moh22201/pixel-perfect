@@ -1,11 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { lazy, Suspense, useRef, useState } from 'react';
-import { Compass, Footprints, Home, LocateFixed, Map, Minus, Plus, Sprout, Sun, UserRound, Warehouse, Wheat, X, ArrowLeft, LockKeyhole } from 'lucide-react';
+import { Compass, Footprints, Home, LocateFixed, Map, Minus, Plus, Sprout, Sun, UserRound, Warehouse, Wheat, X, ArrowLeft, LockKeyhole, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import worldImage from '@/assets/world-minimap.jpg';
 import { regions, ARCHIPELAGO_SIZE, WORLD_OFFSET } from '@/game/regions';
 import type { WorldObject } from '@/game/world';
 import type { GameCommand } from '@/game/events';
+import { SystemsPanel } from '@/game/SystemsPanel';
 
 const GameCanvas = lazy(() => import('@/game/GameCanvas'));
 
@@ -23,9 +24,9 @@ export const Route = createFileRoute('/')({
 
 const details = {
   home: { description: 'بيتك الصغير عند نهاية الممر. من هنا تبدأ حكاية مزرعة الوادي.', label: 'الموقع', value: 'شمال المزرعة', action: 'العودة إلى المزرعة' },
-  field: { description: 'تربة خصبة ومساحة جاهزة للزراعة. ستبدأ أولى المحاصيل في المرحلة التالية.', label: 'حالة الأرض', value: 'غير مزروعة', action: 'متابعة الاستكشاف' },
-  storage: { description: 'مخزن خشبي بجانب الممر الشرقي. سيحفظ محاصيل المزرعة ومواردها عندما تبدأ الزراعة.', label: 'حالة المخزن', value: 'فارغ', action: 'العودة إلى المزرعة' },
-  barn: { description: 'حظيرة المزرعة وفناؤها الصغير. الدجاج والأبقار والأغنام ستصل في مرحلة الحيوانات.', label: 'حالة الحظيرة', value: 'لا توجد حيوانات بعد', action: 'العودة إلى المزرعة' },
+  field: { description: 'تربة خصبة قابلة للزراعة والحصاد. افتح لوحة الأنظمة لاختيار البذور ومتابعة نمو المحصول.', label: 'حالة الأرض', value: 'جاهز للزراعة', action: 'فتح أنظمة الزراعة' },
+  storage: { description: 'مخزن المنتجات والموارد. راجع كميات المحاصيل والمواد في لوحة الأنظمة.', label: 'حالة المخزن', value: 'مخزون التجربة المحلية', action: 'العودة إلى المزرعة' },
+  barn: { description: 'اشترِ الدجاج والأبقار والأغنام، وقدّم لها العلف واجمع منتجاتها بعد اكتمال دورة الإنتاج.', label: 'حالة الحظيرة', value: 'إدارة الحيوانات', action: 'فتح أنظمة الحيوانات' },
   region: { description: '', label: 'الحالة', value: 'مغلقة', action: 'متابعة الاستكشاف' },
 };
 
@@ -35,6 +36,8 @@ function Index() {
   const [moving, setMoving] = useState(false);
   const [object, setObject] = useState<WorldObject | null>(null);
   const [regionMenu, setRegionMenu] = useState(false);
+  const [systemsOpen, setSystemsOpen] = useState(true);
+  const [selectedField, setSelectedField] = useState<number | undefined>();
   const [position, setPosition] = useState({ x: 936, y: 632 });
   const command = (value: GameCommand) => { setObject(null); commands.current?.(value); };
   const detail = object ? details[object.kind] : null;
@@ -46,12 +49,14 @@ function Index() {
         <Button variant="ghost" data-active="true" onClick={() => command('center')}><Sprout />المزرعة</Button>
         <Button variant="ghost" onClick={() => command('home')}><Home />المنزل</Button>
         <Button variant="ghost" onClick={() => command('fields')}><Wheat />الحقول</Button>
+        <Button variant="ghost" data-active={systemsOpen} onClick={() => setSystemsOpen(v => !v)}><Store />الأنظمة</Button>
       </nav>
       <div className="profile"><span className="profile-label" dir="rtl">المزارع</span><span className="profile-icon"><UserRound size={18} /></span></div>
     </header>
     <section className="world-stage" aria-label="مزرعة الوادي">
-      <Suspense fallback={null}><GameCanvas commandRef={commands} callbacks={{ ready: () => setReady(true), arrived: o => setObject(o), moving: setMoving, position: (x, y) => setPosition({ x, y }) }} /></Suspense>
+      <Suspense fallback={null}><GameCanvas commandRef={commands} callbacks={{ ready: () => setReady(true), arrived: o => { setObject(o); if (o.kind === 'field') { setSelectedField(Number(o.id.replace('field-', ''))); setSystemsOpen(true); } else if (o.kind === 'barn') setSystemsOpen(true); }, moving: setMoving, position: (x, y) => setPosition({ x, y }) }} /></Suspense>
       {!ready && <div className="loading-world" dir="rtl"><Sprout size={34} /><span>نفتح بوابة المزرعة…</span></div>}
+      {systemsOpen && <SystemsPanel {...(selectedField !== undefined ? { selectedField } : {})} />}
       <div className="world-top">
         <div className="farm-plaque" dir="rtl"><h2>مزرعة الوادي</h2><div className="plaque-sub"><span className="status-dot" />بداية الحكاية <span>·</span> الربيع</div></div>
         <div className="day-plaque" dir="rtl"><Sun size={25} /><div>نهار مشمس<small>نسيم الربيع</small></div></div>
@@ -64,6 +69,7 @@ function Index() {
         <Button variant="ghost" className="dock-button" onClick={() => command('home')} title="الذهاب إلى المنزل"><Home /><span>المنزل</span></Button>
         <Button variant="ghost" className="dock-button" onClick={() => command('fields')} title="الذهاب إلى الحقول"><Wheat /><span>الحقول</span></Button>
         <Button variant="ghost" className="dock-button" onClick={() => { command('overview'); setRegionMenu(v => !v); }} title="مناطق الاستكشاف"><Compass /><span>استكشاف</span></Button>
+        <Button variant="ghost" className="dock-button" data-active={systemsOpen} onClick={() => setSystemsOpen(v => !v)} title="أنظمة المزرعة"><Store /><span>الأنظمة</span></Button>
       </div>
       {regionMenu && !object && <aside className="interaction region-menu" dir="rtl" aria-label="مناطق الاستكشاف"><div className="interaction-header"><h3>جزر الوادي</h3><Button variant="ghost" size="icon" aria-label="إغلاق المناطق" onClick={() => setRegionMenu(false)}><X /></Button></div><div className="object-detail"><span>الجزيرة الرئيسية</span><strong>متاحة</strong></div>{regions.map(r => <Button key={r.id} variant="ghost" className="region-option" onClick={() => { setRegionMenu(false); command(r.id as GameCommand); }}><LockKeyhole /><span>{r.name}</span><ArrowLeft /></Button>)}</aside>}
       <div className="zoom-controls">
