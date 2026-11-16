@@ -3,7 +3,6 @@ import {
   Outlet,
   Link,
   createRootRouteWithContext,
-  useRouter,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -12,7 +11,6 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -121,23 +119,10 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const router = useRouter();
-  useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      queryClient.setQueryData(["auth-session"], session);
-      if (event === "SIGNED_OUT") {
-        queryClient.removeQueries({ queryKey: ["farm"] });
-        queryClient.removeQueries({ queryKey: ["trade"] });
-      } else queryClient.invalidateQueries();
-      router.invalidate();
-    });
-    return () => data.subscription.unsubscribe();
-  }, [queryClient, router]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+      {/* Local demo mode: player accounts are intentionally disconnected during review. */}
       <Outlet />
       <Toaster position="top-center" richColors />
     </QueryClientProvider>
