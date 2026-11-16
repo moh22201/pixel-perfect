@@ -6,7 +6,7 @@ import worldImage from '@/assets/world-minimap.jpg';
 import { regions, ARCHIPELAGO_SIZE, WORLD_OFFSET } from '@/game/regions';
 import type { WorldObject } from '@/game/world';
 import type { GameCommand } from '@/game/events';
-import { SystemsPanel } from '@/game/SystemsPanel';
+import { SystemsPanel, type Tab } from '@/game/SystemsPanel';
 
 const GameCanvas = lazy(() => import('@/game/GameCanvas'));
 
@@ -36,7 +36,8 @@ function Index() {
   const [moving, setMoving] = useState(false);
   const [object, setObject] = useState<WorldObject | null>(null);
   const [regionMenu, setRegionMenu] = useState(false);
-  const [systemsOpen, setSystemsOpen] = useState(true);
+  const [systemsOpen, setSystemsOpen] = useState(false);
+  const [panelTab, setPanelTab] = useState<Tab | undefined>();
   const [selectedField, setSelectedField] = useState<number | undefined>();
   const [position, setPosition] = useState({ x: 936, y: 632 });
   const command = (value: GameCommand) => { setObject(null); commands.current?.(value); };
@@ -54,9 +55,9 @@ function Index() {
       <div className="profile"><span className="profile-label" dir="rtl">المزارع</span><span className="profile-icon"><UserRound size={18} /></span></div>
     </header>
     <section className="world-stage" aria-label="مزرعة الوادي">
-      <Suspense fallback={null}><GameCanvas commandRef={commands} callbacks={{ ready: () => setReady(true), arrived: o => { setObject(o); if (o.kind === 'field') { setSelectedField(Number(o.id.replace('field-', ''))); setSystemsOpen(true); } else if (o.kind === 'barn') setSystemsOpen(true); }, moving: setMoving, position: (x, y) => setPosition({ x, y }) }} /></Suspense>
+      <Suspense fallback={null}><GameCanvas commandRef={commands} callbacks={{ ready: () => setReady(true), arrived: o => { const tab: Record<string, Tab> = { field: 'farm', barn: 'animals', storage: 'market', home: 'quests' }; if (o.kind === 'region') { setObject(o); return; } setObject(null); if (o.kind === 'field') setSelectedField(Number(o.id.replace('field-', ''))); setPanelTab(tab[o.kind]); setSystemsOpen(true); }, moving: setMoving, position: (x, y) => setPosition({ x, y }) }} /></Suspense>
       {!ready && <div className="loading-world" dir="rtl"><Sprout size={34} /><span>نفتح بوابة المزرعة…</span></div>}
-      {systemsOpen && <SystemsPanel {...(selectedField !== undefined ? { selectedField } : {})} />}
+      {systemsOpen && <SystemsPanel onClose={() => setSystemsOpen(false)} {...(panelTab ? { initialTab: panelTab } : {})} {...(selectedField !== undefined ? { selectedField } : {})} />}
       <div className="world-top">
         <div className="farm-plaque" dir="rtl"><h2>مزرعة الوادي</h2><div className="plaque-sub"><span className="status-dot" />بداية الحكاية <span>·</span> الربيع</div></div>
         <div className="day-plaque" dir="rtl"><Sun size={25} /><div>نهار مشمس<small>نسيم الربيع</small></div></div>

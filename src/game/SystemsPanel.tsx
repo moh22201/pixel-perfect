@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { animals, buildings, crops, itemName, quests, recipes, regionRules, formatSeconds, type AnimalKey, type BuildingKey, type CropKey } from './catalog';
 import { useDemoFarm } from './useDemoFarm';
 
-type Tab = 'farm' | 'animals' | 'production' | 'resources' | 'market' | 'quests';
+export type Tab = 'farm' | 'animals' | 'production' | 'resources' | 'market' | 'quests';
 const tabs: { id: Tab; label: string; icon: typeof Wheat }[] = [
   { id: 'farm', label: 'الزراعة', icon: Wheat },
   { id: 'animals', label: 'الحيوانات', icon: PawPrint },
@@ -17,7 +17,7 @@ const tabs: { id: Tab; label: string; icon: typeof Wheat }[] = [
 const remaining = (at: number | null, now: number) => at === null ? 'غير مفعّل' : at <= now ? 'جاهز' : formatSeconds((at - now) / 1000);
 const regionNames: Record<string, string> = { forest: 'جزيرة الغابة', mines: 'جزيرة المناجم', pasture: 'جزيرة المراعي', workshops: 'جزيرة الصناعة' };
 
-export function SystemsPanel({ onClose, selectedField }: { onClose?: () => void; selectedField?: number }) {
+export function SystemsPanel({ onClose, selectedField, initialTab }: { onClose?: () => void; selectedField?: number; initialTab?: Tab }) {
   const { state, act, reset, hydrated } = useDemoFarm();
   const [tab, setTab] = useState<Tab>('farm');
   const [crop, setCrop] = useState<CropKey>('wheat');
@@ -25,6 +25,7 @@ export function SystemsPanel({ onClose, selectedField }: { onClose?: () => void;
   const [quantity, setQuantity] = useState(1);
   const [item, setItem] = useState('wheat_seed');
   const [now, setNow] = useState(Date.now());
+  useEffect(() => { if (initialTab) setTab(initialTab); }, [initialTab]);
   useEffect(() => {
     if (selectedField) { setField(selectedField); setTab('farm'); }
   }, [selectedField]);
