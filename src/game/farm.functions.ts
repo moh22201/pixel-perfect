@@ -4,6 +4,10 @@ import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import type { FarmState, TradeState } from './catalog';
 
 function fail(error: { message: string } | null) { if (error) throw new Error(error.message); }
+function requireRow<T>(row: T | null): T {
+  if (row === null) throw new Error('تعذر تحميل المزرعة');
+  return row;
+}
 
 export const getFarmState = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
@@ -23,11 +27,10 @@ export const getFarmState = createServerFn({ method: 'GET' })
       db.from('ledger').select('id, action_key, item_key, quantity, coins, description, created_at').eq('user_id', context.userId).order('id', { ascending: false }).limit(16),
     ]);
     for (const result of [profile, farm, inventory, crops, animals, buildings, resources, regions, stats, claims, ledger]) fail(result.error);
-    if (!profile.data || !farm.data || !stats.data) throw new Error('تعذر تحميل المزرعة');
     return {
-      profile: profile.data, farm: farm.data, inventory: inventory.data ?? [], crops: crops.data ?? [],
+      profile: requireRow(profile.data), farm: requireRow(farm.data), inventory: inventory.data ?? [], crops: crops.data ?? [],
       animals: animals.data ?? [], buildings: buildings.data ?? [], resources: resources.data ?? [], regions: regions.data ?? [],
-      stats: stats.data, claims: claims.data ?? [], ledger: ledger.data ?? [], now: new Date().toISOString(),
+      stats: requireRow(stats.data), claims: claims.data ?? [], ledger: ledger.data ?? [], now: new Date().toISOString(),
     };
   });
 
