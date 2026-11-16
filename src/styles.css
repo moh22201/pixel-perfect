@@ -232,3 +232,66 @@
   .footer-bar { padding: 0 12px; font-size: 9px; height: 25px; flex-basis: 25px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+
+/* Interactive local game systems */
+.systems-panel { position: absolute; z-index: 9; top: 92px; right: 18px; bottom: 92px; width: min(370px, calc(100% - 36px)); display: flex; flex-direction: column; overflow: hidden; background: var(--background); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--game-shadow); }
+.systems-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 13px 15px 10px; border-bottom: 1px solid var(--border); }
+.systems-heading h2 { margin: 2px 0 0; font-size: 17px; font-weight: 700; }
+.systems-kicker { font-family: var(--font-display); font-size: 8px; letter-spacing: .08em; color: var(--muted-foreground); }
+.systems-heading-actions { display: flex; align-items: center; gap: 5px; }
+.demo-indicator { border-radius: 20px; background: var(--secondary); color: var(--primary); font-size: 10px; padding: 5px 8px; white-space: nowrap; }
+.systems-wallet { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 9px 12px; border-bottom: 1px solid var(--border); }
+.systems-wallet > div { display: flex; align-items: center; gap: 5px; padding: 7px 6px; border-radius: 5px; background: var(--secondary); font-size: 10px; }
+.systems-wallet svg { color: var(--primary); flex: 0 0 auto; }
+.systems-wallet strong { margin-inline-start: auto; font-size: 12px; font-variant-numeric: tabular-nums; }
+.systems-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 8px; border-bottom: 1px solid var(--border); }
+.systems-tabs button { display: flex; justify-content: center; align-items: center; gap: 5px; min-height: 34px; padding: 5px 3px; border-radius: 5px; color: var(--muted-foreground); font-size: 11px; cursor: pointer; }
+.systems-tabs button.active { background: var(--secondary); color: var(--primary); font-weight: 700; }
+.systems-content { padding: 12px; overflow-y: auto; overscroll-behavior: contain; flex: 1; }
+.systems-content h3 { margin: 0 0 10px; font-size: 14px; font-weight: 700; }
+.systems-content .systems-subheading { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--border); }
+.systems-muted, .systems-content p { color: var(--muted-foreground); font-size: 11px; line-height: 1.7; }
+.systems-empty { padding: 20px 12px; text-align: center; color: var(--muted-foreground); font-size: 12px; }
+.systems-footer { flex: 0 0 auto; border-top: 1px solid var(--border); padding: 8px 10px; color: var(--muted-foreground); text-align: center; font-size: 9px; }
+.field-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.field-card { border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 8px; min-width: 0; }
+.field-card.planted { background: var(--secondary); }
+.field-card-title { display: flex; flex-direction: column; gap: 3px; }
+.field-card-title strong { font-size: 11px; }
+.field-card-title span { min-height: 18px; color: var(--muted-foreground); font-size: 10px; }
+.field-card > small { display: flex; align-items: center; gap: 4px; margin-top: 6px; color: var(--muted-foreground); font-size: 9px; }
+.field-progress { height: 4px; margin-top: 7px; border-radius: 5px; background: var(--border); overflow: hidden; }
+.field-progress span { display: block; height: 100%; background: var(--primary); }
+.systems-box { margin-top: 13px; padding: 11px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); }
+.systems-box label, .systems-field-label { display: flex; flex-direction: column; gap: 5px; margin: 8px 0; color: var(--muted-foreground); font-size: 11px; }
+.systems-box select, .systems-box input, .systems-field-label select, .systems-field-label input { width: 100%; min-height: 34px; border: 1px solid var(--border); border-radius: 5px; padding: 5px 8px; background: var(--background); color: var(--foreground); font: inherit; font-size: 12px; }
+.systems-inline { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0; color: var(--muted-foreground); font-size: 10px; }
+.systems-inline label { flex: 1; }
+.systems-list { display: flex; flex-direction: column; gap: 6px; }
+.systems-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.systems-row > div:first-child { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.systems-row strong { font-size: 12px; }
+.systems-row small { color: var(--muted-foreground); font-size: 10px; }
+.systems-row-actions { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.production-card, .quest-card { padding: 11px 0; border-bottom: 1px solid var(--border); }
+.production-card-head, .quest-head { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; margin-bottom: 7px; }
+.production-card-head > div { display: flex; flex-direction: column; gap: 4px; }
+.production-card-head strong, .quest-head strong { font-size: 12px; }
+.production-card-head small, .quest-head span { color: var(--muted-foreground); font-size: 10px; }
+.production-card-head > span { white-space: nowrap; color: var(--primary); font-size: 10px; }
+.production-card > button { margin-top: 8px; }
+.production-card .systems-row-actions { justify-content: flex-end; margin-top: 8px; }
+.quest-card p { margin: 3px 0 8px; }
+.quest-card .systems-inline { margin-bottom: 0; }
+.systems-success { display: inline-flex; align-items: center; gap: 3px; color: var(--primary); font-size: 10px; }
+.systems-notice { padding: 9px; border: 1px solid var(--border); border-radius: 5px; background: var(--secondary); }
+.interaction:not(.region-menu) { left: 18px; right: auto; }
+@media (max-width: 640px) {
+  .systems-panel { top: 82px; right: 8px; bottom: 82px; width: min(360px, calc(100% - 16px)); }
+  .systems-tabs button { font-size: 10px; }
+  .systems-wallet { padding: 7px; }
+  .systems-wallet > div { gap: 3px; font-size: 9px; }
+  .systems-wallet strong { font-size: 11px; }
+  .interaction:not(.region-menu) { left: 8px; right: auto; width: min(270px, calc(100% - 16px)); }
+}
