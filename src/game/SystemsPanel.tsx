@@ -17,7 +17,7 @@ const tabs: { id: Tab; label: string; icon: typeof Wheat }[] = [
 const remaining = (at: number | null, now: number) => at === null ? 'غير مفعّل' : at <= now ? 'جاهز' : formatSeconds((at - now) / 1000);
 const regionNames: Record<string, string> = { forest: 'جزيرة الغابة', mines: 'جزيرة المناجم', pasture: 'جزيرة المراعي', workshops: 'جزيرة الصناعة' };
 
-export function SystemsPanel({ onClose }: { onClose?: () => void }) {
+export function SystemsPanel({ onClose, selectedField }: { onClose?: () => void; selectedField?: number }) {
   const { state, act, reset, hydrated } = useDemoFarm();
   const [tab, setTab] = useState<Tab>('farm');
   const [crop, setCrop] = useState<CropKey>('wheat');
@@ -25,6 +25,9 @@ export function SystemsPanel({ onClose }: { onClose?: () => void }) {
   const [quantity, setQuantity] = useState(1);
   const [item, setItem] = useState('wheat_seed');
   const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (selectedField) { setField(selectedField); setTab('farm'); }
+  }, [selectedField]);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
