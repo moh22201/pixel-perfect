@@ -37,6 +37,7 @@ function Index() {
   const [object, setObject] = useState<WorldObject | null>(null);
   const [regionMenu, setRegionMenu] = useState(false);
   const [systemsOpen, setSystemsOpen] = useState(true);
+  const [selectedField, setSelectedField] = useState<number | undefined>();
   const [position, setPosition] = useState({ x: 936, y: 632 });
   const command = (value: GameCommand) => { setObject(null); commands.current?.(value); };
   const detail = object ? details[object.kind] : null;
@@ -53,9 +54,9 @@ function Index() {
       <div className="profile"><span className="profile-label" dir="rtl">المزارع</span><span className="profile-icon"><UserRound size={18} /></span></div>
     </header>
     <section className="world-stage" aria-label="مزرعة الوادي">
-      <Suspense fallback={null}><GameCanvas commandRef={commands} callbacks={{ ready: () => setReady(true), arrived: o => setObject(o), moving: setMoving, position: (x, y) => setPosition({ x, y }) }} /></Suspense>
+      <Suspense fallback={null}><GameCanvas commandRef={commands} callbacks={{ ready: () => setReady(true), arrived: o => { setObject(o); if (o.kind === 'field') { setSelectedField(Number(o.id.replace('field-', ''))); setSystemsOpen(true); } else if (o.kind === 'barn') setSystemsOpen(true); }, moving: setMoving, position: (x, y) => setPosition({ x, y }) }} /></Suspense>
       {!ready && <div className="loading-world" dir="rtl"><Sprout size={34} /><span>نفتح بوابة المزرعة…</span></div>}
-      {systemsOpen && <SystemsPanel />}
+      {systemsOpen && <SystemsPanel selectedField={selectedField} />}
       <div className="world-top">
         <div className="farm-plaque" dir="rtl"><h2>مزرعة الوادي</h2><div className="plaque-sub"><span className="status-dot" />بداية الحكاية <span>·</span> الربيع</div></div>
         <div className="day-plaque" dir="rtl"><Sun size={25} /><div>نهار مشمس<small>نسيم الربيع</small></div></div>
