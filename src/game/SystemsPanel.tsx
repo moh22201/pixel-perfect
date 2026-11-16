@@ -3,7 +3,7 @@ import { Wheat, PawPrint, Factory, Trees, Store, ScrollText, LockKeyhole, Packag
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { animals, buildings, crops, itemName, quests, recipes, regionRules, formatSeconds, type AnimalKey, type BuildingKey, type CropKey } from './catalog';
-import { useDemoFarm } from './useDemoFarm';
+import type { useDemoFarm } from './useDemoFarm';
 
 export type Tab = 'farm' | 'animals' | 'production' | 'resources' | 'market' | 'quests';
 const tabs: { id: Tab; label: string; icon: typeof Wheat }[] = [
@@ -17,8 +17,8 @@ const tabs: { id: Tab; label: string; icon: typeof Wheat }[] = [
 const remaining = (at: number | null, now: number) => at === null ? 'غير مفعّل' : at <= now ? 'جاهز' : formatSeconds((at - now) / 1000);
 const regionNames: Record<string, string> = { forest: 'جزيرة الغابة', mines: 'جزيرة المناجم', pasture: 'جزيرة المراعي', workshops: 'جزيرة الصناعة' };
 
-export function SystemsPanel({ onClose, selectedField, initialTab }: { onClose?: () => void; selectedField?: number; initialTab?: Tab }) {
-  const { state, act, reset, hydrated } = useDemoFarm();
+export function SystemsPanel({ farm, onClose, selectedField, initialTab }: { farm: ReturnType<typeof useDemoFarm>; onClose?: () => void; selectedField?: number; initialTab?: Tab }) {
+  const { state, act, reset, hydrated } = farm;
   const [tab, setTab] = useState<Tab>('farm');
   const [crop, setCrop] = useState<CropKey>('wheat');
   const [field, setField] = useState(1);

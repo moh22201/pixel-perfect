@@ -1,5 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { lazy, Suspense, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { useDemoFarm } from '@/game/useDemoFarm';
+import { crops, formatSeconds, type CropKey } from '@/game/catalog';
+import type { FarmScene } from '@/game/FarmScene';
 import { Compass, Footprints, Home, LocateFixed, Map, Minus, Plus, Sprout, Sun, UserRound, Warehouse, Wheat, X, ArrowLeft, LockKeyhole, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import worldImage from '@/assets/world-minimap.jpg';
@@ -32,7 +36,23 @@ const details = {
 
 function Index() {
   const commands = useRef<((command: GameCommand) => void) | null>(null);
+  const sceneRef = useRef<FarmScene | null>(null);
+  const farm = useDemoFarm();
+  const [seed, setSeed] = useState<CropKey>('wheat');
   const [ready, setReady] = useState(false);
+  useEffect(() => { sceneRef.current?.setFields(farm.state.fields); }, [farm.state.fields, ready]);
+  const workField = (id: number) => {
+    const field = farm.state.fields.find(f => f.id === id); if (!field) return;
+    const pop = (t: string) => sceneRef.current?.popText(id, t);
+    if (!field.crop) {
+      const r = farm.act({ type: 'plant', field: id, crop: seed });
+      if (r.ok) pop(`🌱 ${crops[seed].name}`); else toast.error(r.message);
+    } else if (field.readyAt && field.readyAt <= Date.now()) {
+      const name = crops[field.crop].name, amount = crops[field.crop].yield;
+      const r = farm.act({ type: 'harvest', field: id });
+      if (r.ok) pop(`+${amount} ${name}`); else toast.error(r.message);
+    } else pop(`⏳ ${formatSeconds(((field.readyAt ?? 0) - Date.now()) / 1000)}`);
+  };
   const [moving, setMoving] = useState(false);
   const [object, setObject] = useState<WorldObject | null>(null);
   const [regionMenu, setRegionMenu] = useState(false);
@@ -55,15 +75,16 @@ function Index() {
       <div className="profile"><span className="profile-label" dir="rtl">المزارع</span><span className="profile-icon"><UserRound size={18} /></span></div>
     </header>
     <section className="world-stage" aria-label="مزرعة الوادي">
-      <Suspense fallback={null}><GameCanvas commandRef={commands} callbacks={{ ready: () => setReady(true), arrived: o => { const tab: Record<string, Tab> = { field: 'farm', barn: 'animals', storage: 'market', home: 'quests' }; if (o.kind === 'region') { setObject(o); return; } setObject(null); if (o.kind === 'field') setSelectedField(Number(o.id.replace('field-', ''))); setPanelTab(tab[o.kind]); setSystemsOpen(true); }, moving: setMoving, position: (x, y) => setPosition({ x, y }) }} /></Suspense>
+      <Suspense fallback={null}><GameCanvas commandRef={commands} sceneRef={sceneRef} callbacks={{ ready: () => setReady(true), arrived: o => { const tab: Record<string, Tab> = { field: 'farm', barn: 'animals', storage: 'market', home: 'quests' }; if (o.kind === 'region') { setObject(o); return; } setObject(null); if (o.kind === 'field') { workField(Number(o.id.replace('field-', ''))); return; } setPanelTab(tab[o.kind]); setSystemsOpen(true); }, moving: setMoving, position: (x, y) => setPosition({ x, y }) }} /></Suspense>
       {!ready && <div className="loading-world" dir="rtl"><Sprout size={34} /><span>نفتح بوابة المزرعة…</span></div>}
-      {systemsOpen && <SystemsPanel onClose={() => setSystemsOpen(false)} {...(panelTab ? { initialTab: panelTab } : {})} {...(selectedField !== undefined ? { selectedField } : {})} />}
+      {systemsOpen && <SystemsPanel farm={farm} onClose={() => setSystemsOpen(false)} {...(panelTab ? { initialTab: panelTab } : {})} {...(selectedField !== undefined ? { selectedField } : {})} />}
       <div className="world-top">
         <div className="farm-plaque" dir="rtl"><h2>مزرعة الوادي</h2><div className="plaque-sub"><span className="status-dot" />بداية الحكاية <span>·</span> الربيع</div></div>
         <div className="day-plaque" dir="rtl"><Sun size={25} /><div>نهار مشمس<small>نسيم الربيع</small></div></div>
       </div>
       <div className="map-preview" aria-label="خريطة مصغرة"><img src={worldImage} width={128} height={128} alt="خريطة جزر الوادي" /><svg viewBox={`0 0 ${ARCHIPELAGO_SIZE} ${ARCHIPELAGO_SIZE}`}><circle cx={position.x + WORLD_OFFSET} cy={position.y + WORLD_OFFSET} r="42" fill="currentColor" /><circle cx={position.x + WORLD_OFFSET} cy={position.y + WORLD_OFFSET} r="64" fill="none" stroke="currentColor" strokeWidth="14" /></svg></div>
       <div className="movement-state" dir="rtl"><Footprints size={15} /><span>{moving ? 'في الطريق…' : 'في المزرعة'}</span><span className="status-dot" /></div>
+      <div className="seed-bar" dir="rtl" aria-label="البذور">{(Object.keys(crops) as CropKey[]).filter(k => (farm.state.inventory[`${k}_seed`] ?? 0) > 0 || k === seed).map(k => <button key={k} className="seed-chip" data-active={seed === k} onClick={() => setSeed(k)}><Sprout size={14} />{crops[k].name}<b>{farm.state.inventory[`${k}_seed`] ?? 0}</b></button>)}<span className="seed-coins">🪙 {farm.state.coins}</span></div>
       <div className="bottom-dock" dir="rtl">
         <Button variant="ghost" className="dock-button" onClick={() => { command('overview'); setRegionMenu(false); }} title="خريطة الجزر"><Map /><span>الجزر</span></Button>
         <span className="dock-divider" />

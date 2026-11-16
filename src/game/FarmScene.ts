@@ -4,6 +4,8 @@ import oceanImage from '@/assets/archipelago.jpg';
 import { ARCHIPELAGO_SIZE, WORLD_OFFSET, regions, regionAt } from './regions';
 import { createFarmer } from './farmer';
 import { CELL, WORLD_SIZE, findPath, objects, type Point, type WorldObject } from './world';
+import { drawFields } from './crops-render';
+import type { DemoField } from './demo-store';
 import type { GameCallbacks, GameCommand } from './events';
 
 export class FarmScene extends Phaser.Scene {
@@ -18,6 +20,14 @@ export class FarmScene extends Phaser.Scene {
   private overview = false;
   private dragging = false;
   private ripples: Phaser.GameObjects.Rectangle[] = [];
+  private fields: DemoField[] = [];
+  private cropLayer?: Phaser.GameObjects.Graphics;
+  setFields(fields: DemoField[]) { this.fields = fields; }
+  popText(fieldId: number, text: string) {
+    const o = objects.find(x => x.id === `field-${fieldId}`); if (!o || !this.cropLayer) return;
+    const t = this.add.text(o.x + o.w / 2, o.y + 20, text, { fontFamily: 'IBM Plex Sans Arabic', fontSize: '22px', color: '#fff5d8', stroke: '#234b3a', strokeThickness: 5 }).setOrigin(0.5).setDepth(20);
+    this.tweens.add({ targets: t, y: t.y - 50, alpha: 0, duration: 1200, onComplete: () => t.destroy() });
+  }
   constructor(private callbacks: GameCallbacks) { super('farm'); }
   preload() { this.load.image('world', worldImage); this.load.image('ocean', oceanImage); }
   create() {
@@ -37,6 +47,7 @@ export class FarmScene extends Phaser.Scene {
       lock.fillStyle(0x68492f).fillRect(x - 4, y - 20, 8, 16);
       this.add.text(x, y + 30, region.name, { fontFamily: 'IBM Plex Sans Arabic', fontSize: '24px', color: '#fff5d8', stroke: '#234b3a', strokeThickness: 6 }).setOrigin(0.5).setDepth(4);
     }
+    this.cropLayer = this.add.graphics().setDepth(5);
     createFarmer(this);
     this.shadow = this.add.ellipse(936, 632, 33, 12, 0x283a27, 0.25).setDepth(9);
     this.farmer = this.add.sprite(936, 632, 'farmer-down-0').setOrigin(0.5, 1).setScale(2.2).setDepth(10);
@@ -101,6 +112,7 @@ export class FarmScene extends Phaser.Scene {
       const ripple = this.ripples[i];
       if (ripple) ripple.setAlpha(0.12 + (Math.sin(time / 1300 + i) + 1) * 0.13).setScale(1 + Math.sin(time / 2000 + i) * 0.25, 1);
     }
+    if (this.cropLayer) drawFields(this.cropLayer, this.fields, Date.now(), time);
     if (!this.farmer) return;
     const next = this.path[0];
     if (next) {
