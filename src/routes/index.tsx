@@ -56,7 +56,7 @@ function Index() {
     <section className="world-stage" aria-label="مزرعة الوادي">
       <Suspense fallback={null}><GameCanvas commandRef={commands} callbacks={{ ready: () => setReady(true), arrived: o => { setObject(o); if (o.kind === 'field') { setSelectedField(Number(o.id.replace('field-', ''))); setSystemsOpen(true); } else if (o.kind === 'barn') setSystemsOpen(true); }, moving: setMoving, position: (x, y) => setPosition({ x, y }) }} /></Suspense>
       {!ready && <div className="loading-world" dir="rtl"><Sprout size={34} /><span>نفتح بوابة المزرعة…</span></div>}
-      {systemsOpen && <SystemsPanel selectedField={selectedField} />}
+      {systemsOpen && <SystemsPanel {...(selectedField !== undefined ? { selectedField } : {})} />}
       <div className="world-top">
         <div className="farm-plaque" dir="rtl"><h2>مزرعة الوادي</h2><div className="plaque-sub"><span className="status-dot" />بداية الحكاية <span>·</span> الربيع</div></div>
         <div className="day-plaque" dir="rtl"><Sun size={25} /><div>نهار مشمس<small>نسيم الربيع</small></div></div>
