@@ -86,7 +86,8 @@ export function applyDemoAction(current: DemoState, action: DemoAction): { state
       state.inventory[key] = (state.inventory[key] ?? 0) - 1;
       const now = Date.now();
       field.crop = action.crop; field.plantedAt = now; field.readyAt = now + crop.growSeconds * 1000;
-      state.stats.planted += 1; state.xp += crop.xp; state.level = Math.max(state.level, xpForLevel(state.level + 1) <= state.xp ? state.level + 1 : state.level);
+      state.stats.planted += 1; state.xp += crop.xp;
+      while (state.xp >= xpForLevel(state.level + 1)) state.level += 1;
       return accept(`زُرع ${crop.name} في الحقل ${field.id}`);
     }
     case 'harvest': {
@@ -109,7 +110,7 @@ export function applyDemoAction(current: DemoState, action: DemoAction): { state
     case 'feed-animal': {
       const animal = state.animals.find(a => a.id === action.id);
       if (!animal) return reject('الحيوان غير موجود');
-      if (animal.readyAt && !ready(animal.readyAt)) return reject('الحيوان في دورة إنتاج حالياً');
+      if (animal.readyAt !== null) return reject(ready(animal.readyAt) ? 'اجمع المنتج الجاهز أولاً' : 'الحيوان في دورة إنتاج حالياً');
       if ((state.inventory.feed ?? 0) < 1) return reject('تحتاج إلى علف');
       state.inventory.feed -= 1;
       animal.readyAt = Date.now() + animals[animal.kind].seconds * 1000;
