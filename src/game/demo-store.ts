@@ -111,7 +111,7 @@ export function applyDemoAction(current: DemoState, action: DemoAction): { state
       const animal = state.animals.find(a => a.id === action.id);
       if (!animal) return reject('الحيوان غير موجود');
       if (animal.readyAt !== null) return reject(ready(animal.readyAt) ? 'اجمع المنتج الجاهز أولاً' : 'الحيوان في دورة إنتاج حالياً');
-      if ((state.inventory.feed ?? 0) < 1) return reject('تحتاج إلى علف');
+      if ((state.inventory['feed'] ?? 0) < 1) return reject('تحتاج إلى علف');
       state.inventory['feed'] = (state.inventory['feed'] ?? 0) - 1;
       animal.readyAt = Date.now() + animals[animal.kind].seconds * 1000;
       return accept('تم تقديم العلف وبدأت دورة الإنتاج');
